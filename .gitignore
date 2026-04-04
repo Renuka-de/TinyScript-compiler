@@ -1,2 +1,14 @@
+# build files
+*.exe
+tinyscript
+*.out
+
+# generated files
+src/lexer.c
+src/parser.c
+*.tab.c
+*.tab.h
+
+# system files
 __pycache__/
 *.pyc
