@@ -27,6 +27,8 @@ int is_sensor_name(const char *name);
 %token DEVICE IF THEN ELSE END LOOP TIMES DO ON SCHEDULE AT LOG OFF
 %token PLUS MINUS MULT DIV GT LT GE LE EQ NEQ ASSIGN
 
+%define parse.error verbose
+
 %left EQ NEQ
 %left GT LT GE LE
 %left PLUS MINUS

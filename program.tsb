@@ -1,8 +1,10 @@
   PROGRAM
-  DEVICE siren
+  DEVICE fan
   DEVICE led
-  LOG "Event-driven security automation"
-  ON (motion == 1) THEN
-  ACTION siren ON
+  LOG "Thermostat controller starting"
+  IF (temperature > 30) THEN
+  ACTION fan ON
   ACTION led ON
-  LOG "Motion detected: security mode active"
+  ELSE
+  ACTION fan OFF
+  ACTION led OFF

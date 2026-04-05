@@ -353,7 +353,7 @@ typedef int yy_state_fast_t;
 
 #define YY_ASSERT(E) ((void) (0 && (E)))
 
-#if !defined yyoverflow
+#if 1
 
 /* The parser invokes alloca or malloc; define the necessary symbols.  */
 
@@ -418,7 +418,7 @@ void free (void *); /* INFRINGES ON USER NAME SPACE */
 #   endif
 #  endif
 # endif
-#endif /* !defined yyoverflow */
+#endif /* 1 */
 
 #if (! defined yyoverflow \
      && (! defined __cplusplus \
@@ -544,17 +544,17 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    40,    40,    44,    45,    49,    50,    54,    55,    56,
-      57,    58,    59,    60,    61,    65,    69,    70,    74,    78,
-      82,    83,    87,    91,    95,    99,   100,   101,   102,   103,
-     104,   105,   106,   107,   108,   109,   110,   111
+       0,    42,    42,    46,    47,    51,    52,    56,    57,    58,
+      59,    60,    61,    62,    63,    67,    71,    72,    76,    80,
+      84,    85,    89,    93,    97,   101,   102,   103,   104,   105,
+     106,   107,   108,   109,   110,   111,   112,   113
 };
 #endif
 
 /** Accessing symbol of state STATE.  */
 #define YY_ACCESSING_SYMBOL(State) YY_CAST (yysymbol_kind_t, yystos[State])
 
-#if YYDEBUG || 0
+#if 1
 /* The user-facing name of the symbol whose (internal) number is
    YYSYMBOL.  No bounds checking.  */
 static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
@@ -879,8 +879,275 @@ int yydebug;
 #endif
 
 
+/* Context of a parse error.  */
+typedef struct
+{
+  yy_state_t *yyssp;
+  yysymbol_kind_t yytoken;
+} yypcontext_t;
+
+/* Put in YYARG at most YYARGN of the expected tokens given the
+   current YYCTX, and return the number of tokens stored in YYARG.  If
+   YYARG is null, return the number of expected tokens (guaranteed to
+   be less than YYNTOKENS).  Return YYENOMEM on memory exhaustion.
+   Return 0 if there are more than YYARGN expected tokens, yet fill
+   YYARG up to YYARGN. */
+static int
+yypcontext_expected_tokens (const yypcontext_t *yyctx,
+                            yysymbol_kind_t yyarg[], int yyargn)
+{
+  /* Actual size of YYARG. */
+  int yycount = 0;
+  int yyn = yypact[+*yyctx->yyssp];
+  if (!yypact_value_is_default (yyn))
+    {
+      /* Start YYX at -YYN if negative to avoid negative indexes in
+         YYCHECK.  In other words, skip the first -YYN actions for
+         this state because they are default actions.  */
+      int yyxbegin = yyn < 0 ? -yyn : 0;
+      /* Stay within bounds of both yycheck and yytname.  */
+      int yychecklim = YYLAST - yyn + 1;
+      int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
+      int yyx;
+      for (yyx = yyxbegin; yyx < yyxend; ++yyx)
+        if (yycheck[yyx + yyn] == yyx && yyx != YYSYMBOL_YYerror
+            && !yytable_value_is_error (yytable[yyx + yyn]))
+          {
+            if (!yyarg)
+              ++yycount;
+            else if (yycount == yyargn)
+              return 0;
+            else
+              yyarg[yycount++] = YY_CAST (yysymbol_kind_t, yyx);
+          }
+    }
+  if (yyarg && yycount == 0 && 0 < yyargn)
+    yyarg[0] = YYSYMBOL_YYEMPTY;
+  return yycount;
+}
 
 
+
+
+#ifndef yystrlen
+# if defined __GLIBC__ && defined _STRING_H
+#  define yystrlen(S) (YY_CAST (YYPTRDIFF_T, strlen (S)))
+# else
+/* Return the length of YYSTR.  */
+static YYPTRDIFF_T
+yystrlen (const char *yystr)
+{
+  YYPTRDIFF_T yylen;
+  for (yylen = 0; yystr[yylen]; yylen++)
+    continue;
+  return yylen;
+}
+# endif
+#endif
+
+#ifndef yystpcpy
+# if defined __GLIBC__ && defined _STRING_H && defined _GNU_SOURCE
+#  define yystpcpy stpcpy
+# else
+/* Copy YYSRC to YYDEST, returning the address of the terminating '\0' in
+   YYDEST.  */
+static char *
+yystpcpy (char *yydest, const char *yysrc)
+{
+  char *yyd = yydest;
+  const char *yys = yysrc;
+
+  while ((*yyd++ = *yys++) != '\0')
+    continue;
+
+  return yyd - 1;
+}
+# endif
+#endif
+
+#ifndef yytnamerr
+/* Copy to YYRES the contents of YYSTR after stripping away unnecessary
+   quotes and backslashes, so that it's suitable for yyerror.  The
+   heuristic is that double-quoting is unnecessary unless the string
+   contains an apostrophe, a comma, or backslash (other than
+   backslash-backslash).  YYSTR is taken from yytname.  If YYRES is
+   null, do not copy; instead, return the length of what the result
+   would have been.  */
+static YYPTRDIFF_T
+yytnamerr (char *yyres, const char *yystr)
+{
+  if (*yystr == '"')
+    {
+      YYPTRDIFF_T yyn = 0;
+      char const *yyp = yystr;
+      for (;;)
+        switch (*++yyp)
+          {
+          case '\'':
+          case ',':
+            goto do_not_strip_quotes;
+
+          case '\\':
+            if (*++yyp != '\\')
+              goto do_not_strip_quotes;
+            else
+              goto append;
+
+          append:
+          default:
+            if (yyres)
+              yyres[yyn] = *yyp;
+            yyn++;
+            break;
+
+          case '"':
+            if (yyres)
+              yyres[yyn] = '\0';
+            return yyn;
+          }
+    do_not_strip_quotes: ;
+    }
+
+  if (yyres)
+    return yystpcpy (yyres, yystr) - yyres;
+  else
+    return yystrlen (yystr);
+}
+#endif
+
+
+static int
+yy_syntax_error_arguments (const yypcontext_t *yyctx,
+                           yysymbol_kind_t yyarg[], int yyargn)
+{
+  /* Actual size of YYARG. */
+  int yycount = 0;
+  /* There are many possibilities here to consider:
+     - If this state is a consistent state with a default action, then
+       the only way this function was invoked is if the default action
+       is an error action.  In that case, don't check for expected
+       tokens because there are none.
+     - The only way there can be no lookahead present (in yychar) is if
+       this state is a consistent state with a default action.  Thus,
+       detecting the absence of a lookahead is sufficient to determine
+       that there is no unexpected or expected token to report.  In that
+       case, just report a simple "syntax error".
+     - Don't assume there isn't a lookahead just because this state is a
+       consistent state with a default action.  There might have been a
+       previous inconsistent state, consistent state with a non-default
+       action, or user semantic action that manipulated yychar.
+     - Of course, the expected token list depends on states to have
+       correct lookahead information, and it depends on the parser not
+       to perform extra reductions after fetching a lookahead from the
+       scanner and before detecting a syntax error.  Thus, state merging
+       (from LALR or IELR) and default reductions corrupt the expected
+       token list.  However, the list is correct for canonical LR with
+       one exception: it will still contain any token that will not be
+       accepted due to an error action in a later state.
+  */
+  if (yyctx->yytoken != YYSYMBOL_YYEMPTY)
+    {
+      int yyn;
+      if (yyarg)
+        yyarg[yycount] = yyctx->yytoken;
+      ++yycount;
+      yyn = yypcontext_expected_tokens (yyctx,
+                                        yyarg ? yyarg + 1 : yyarg, yyargn - 1);
+      if (yyn == YYENOMEM)
+        return YYENOMEM;
+      else
+        yycount += yyn;
+    }
+  return yycount;
+}
+
+/* Copy into *YYMSG, which is of size *YYMSG_ALLOC, an error message
+   about the unexpected token YYTOKEN for the state stack whose top is
+   YYSSP.
+
+   Return 0 if *YYMSG was successfully written.  Return -1 if *YYMSG is
+   not large enough to hold the message.  In that case, also set
+   *YYMSG_ALLOC to the required number of bytes.  Return YYENOMEM if the
+   required number of bytes is too large to store.  */
+static int
+yysyntax_error (YYPTRDIFF_T *yymsg_alloc, char **yymsg,
+                const yypcontext_t *yyctx)
+{
+  enum { YYARGS_MAX = 5 };
+  /* Internationalized format string. */
+  const char *yyformat = YY_NULLPTR;
+  /* Arguments of yyformat: reported tokens (one for the "unexpected",
+     one per "expected"). */
+  yysymbol_kind_t yyarg[YYARGS_MAX];
+  /* Cumulated lengths of YYARG.  */
+  YYPTRDIFF_T yysize = 0;
+
+  /* Actual size of YYARG. */
+  int yycount = yy_syntax_error_arguments (yyctx, yyarg, YYARGS_MAX);
+  if (yycount == YYENOMEM)
+    return YYENOMEM;
+
+  switch (yycount)
+    {
+#define YYCASE_(N, S)                       \
+      case N:                               \
+        yyformat = S;                       \
+        break
+    default: /* Avoid compiler warnings. */
+      YYCASE_(0, YY_("syntax error"));
+      YYCASE_(1, YY_("syntax error, unexpected %s"));
+      YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
+      YYCASE_(3, YY_("syntax error, unexpected %s, expecting %s or %s"));
+      YYCASE_(4, YY_("syntax error, unexpected %s, expecting %s or %s or %s"));
+      YYCASE_(5, YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s"));
+#undef YYCASE_
+    }
+
+  /* Compute error message size.  Don't count the "%s"s, but reserve
+     room for the terminator.  */
+  yysize = yystrlen (yyformat) - 2 * yycount + 1;
+  {
+    int yyi;
+    for (yyi = 0; yyi < yycount; ++yyi)
+      {
+        YYPTRDIFF_T yysize1
+          = yysize + yytnamerr (YY_NULLPTR, yytname[yyarg[yyi]]);
+        if (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM)
+          yysize = yysize1;
+        else
+          return YYENOMEM;
+      }
+  }
+
+  if (*yymsg_alloc < yysize)
+    {
+      *yymsg_alloc = 2 * yysize;
+      if (! (yysize <= *yymsg_alloc
+             && *yymsg_alloc <= YYSTACK_ALLOC_MAXIMUM))
+        *yymsg_alloc = YYSTACK_ALLOC_MAXIMUM;
+      return -1;
+    }
+
+  /* Avoid sprintf, as that infringes on the user's name space.
+     Don't have undefined behavior even if the translation
+     produced a string with the wrong number of "%s"s.  */
+  {
+    char *yyp = *yymsg;
+    int yyi = 0;
+    while ((*yyp = *yyformat) != '\0')
+      if (*yyp == '%' && yyformat[1] == 's' && yyi < yycount)
+        {
+          yyp += yytnamerr (yyp, yytname[yyarg[yyi++]]);
+          yyformat += 2;
+        }
+      else
+        {
+          ++yyp;
+          ++yyformat;
+        }
+  }
+  return 0;
+}
 
 
 /*-----------------------------------------------.
@@ -949,7 +1216,10 @@ yyparse (void)
      action routines.  */
   YYSTYPE yyval;
 
-
+  /* Buffer for error messages, and its allocated size.  */
+  char yymsgbuf[128];
+  char *yymsg = yymsgbuf;
+  YYPTRDIFF_T yymsg_alloc = sizeof yymsgbuf;
 
 #define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N))
 
@@ -1160,223 +1430,223 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* program: stmt_list  */
-#line 40 "src/tinyscript.y"
+#line 42 "src/tinyscript.y"
               { root = ast_new_program((yyvsp[0].node)); }
-#line 1166 "src/parser.c"
+#line 1436 "src/parser.c"
     break;
 
   case 3: /* block: %empty  */
-#line 44 "src/tinyscript.y"
+#line 46 "src/tinyscript.y"
                   { (yyval.node) = NULL; }
-#line 1172 "src/parser.c"
+#line 1442 "src/parser.c"
     break;
 
   case 4: /* block: stmt_list  */
-#line 45 "src/tinyscript.y"
+#line 47 "src/tinyscript.y"
                 { (yyval.node) = (yyvsp[0].node); }
-#line 1178 "src/parser.c"
+#line 1448 "src/parser.c"
     break;
 
   case 5: /* stmt_list: stmt  */
-#line 49 "src/tinyscript.y"
+#line 51 "src/tinyscript.y"
            { (yyval.node) = ast_append_stmt(NULL, (yyvsp[0].node)); }
-#line 1184 "src/parser.c"
+#line 1454 "src/parser.c"
     break;
 
   case 6: /* stmt_list: stmt_list stmt  */
-#line 50 "src/tinyscript.y"
+#line 52 "src/tinyscript.y"
                      { (yyval.node) = ast_append_stmt((yyvsp[-1].node), (yyvsp[0].node)); }
-#line 1190 "src/parser.c"
+#line 1460 "src/parser.c"
     break;
 
   case 7: /* stmt: device_decl ';'  */
-#line 54 "src/tinyscript.y"
+#line 56 "src/tinyscript.y"
                       { (yyval.node) = (yyvsp[-1].node); }
-#line 1196 "src/parser.c"
+#line 1466 "src/parser.c"
     break;
 
   case 8: /* stmt: action_stmt ';'  */
-#line 55 "src/tinyscript.y"
+#line 57 "src/tinyscript.y"
                       { (yyval.node) = (yyvsp[-1].node); }
-#line 1202 "src/parser.c"
+#line 1472 "src/parser.c"
     break;
 
   case 9: /* stmt: assign_stmt ';'  */
-#line 56 "src/tinyscript.y"
+#line 58 "src/tinyscript.y"
                       { (yyval.node) = (yyvsp[-1].node); }
-#line 1208 "src/parser.c"
+#line 1478 "src/parser.c"
     break;
 
   case 10: /* stmt: log_stmt ';'  */
-#line 57 "src/tinyscript.y"
+#line 59 "src/tinyscript.y"
                    { (yyval.node) = (yyvsp[-1].node); }
-#line 1214 "src/parser.c"
+#line 1484 "src/parser.c"
     break;
 
   case 11: /* stmt: if_stmt  */
-#line 58 "src/tinyscript.y"
+#line 60 "src/tinyscript.y"
               { (yyval.node) = (yyvsp[0].node); }
-#line 1220 "src/parser.c"
+#line 1490 "src/parser.c"
     break;
 
   case 12: /* stmt: loop_stmt  */
-#line 59 "src/tinyscript.y"
+#line 61 "src/tinyscript.y"
                 { (yyval.node) = (yyvsp[0].node); }
-#line 1226 "src/parser.c"
+#line 1496 "src/parser.c"
     break;
 
   case 13: /* stmt: event_stmt  */
-#line 60 "src/tinyscript.y"
+#line 62 "src/tinyscript.y"
                  { (yyval.node) = (yyvsp[0].node); }
-#line 1232 "src/parser.c"
+#line 1502 "src/parser.c"
     break;
 
   case 14: /* stmt: schedule_stmt  */
-#line 61 "src/tinyscript.y"
+#line 63 "src/tinyscript.y"
                     { (yyval.node) = (yyvsp[0].node); }
-#line 1238 "src/parser.c"
+#line 1508 "src/parser.c"
     break;
 
   case 15: /* device_decl: DEVICE IDENT  */
-#line 65 "src/tinyscript.y"
+#line 67 "src/tinyscript.y"
                  { (yyval.node) = ast_new_device_decl((yyvsp[0].str), yylineno); }
-#line 1244 "src/parser.c"
+#line 1514 "src/parser.c"
     break;
 
   case 16: /* action_stmt: IDENT ON  */
-#line 69 "src/tinyscript.y"
+#line 71 "src/tinyscript.y"
                { (yyval.node) = ast_new_action((yyvsp[-1].str), 1, yylineno); }
-#line 1250 "src/parser.c"
+#line 1520 "src/parser.c"
     break;
 
   case 17: /* action_stmt: IDENT OFF  */
-#line 70 "src/tinyscript.y"
+#line 72 "src/tinyscript.y"
                 { (yyval.node) = ast_new_action((yyvsp[-1].str), 0, yylineno); }
-#line 1256 "src/parser.c"
+#line 1526 "src/parser.c"
     break;
 
   case 18: /* assign_stmt: IDENT ASSIGN expr  */
-#line 74 "src/tinyscript.y"
+#line 76 "src/tinyscript.y"
                       { (yyval.node) = ast_new_assign((yyvsp[-2].str), (yyvsp[0].expr), yylineno); }
-#line 1262 "src/parser.c"
+#line 1532 "src/parser.c"
     break;
 
   case 19: /* log_stmt: LOG STRING  */
-#line 78 "src/tinyscript.y"
+#line 80 "src/tinyscript.y"
                { (yyval.node) = ast_new_log((yyvsp[0].str), yylineno); }
-#line 1268 "src/parser.c"
+#line 1538 "src/parser.c"
     break;
 
   case 20: /* if_stmt: IF expr THEN block ELSE block END  */
-#line 82 "src/tinyscript.y"
+#line 84 "src/tinyscript.y"
                                       { (yyval.node) = ast_new_if((yyvsp[-5].expr), (yyvsp[-3].node), (yyvsp[-1].node), yylineno); }
-#line 1274 "src/parser.c"
+#line 1544 "src/parser.c"
     break;
 
   case 21: /* if_stmt: IF expr THEN block END  */
-#line 83 "src/tinyscript.y"
+#line 85 "src/tinyscript.y"
                            { (yyval.node) = ast_new_if((yyvsp[-3].expr), (yyvsp[-1].node), NULL, yylineno); }
-#line 1280 "src/parser.c"
+#line 1550 "src/parser.c"
     break;
 
   case 22: /* loop_stmt: LOOP NUMBER TIMES DO block END  */
-#line 87 "src/tinyscript.y"
+#line 89 "src/tinyscript.y"
                                    { (yyval.node) = ast_new_loop((yyvsp[-4].num), (yyvsp[-1].node), yylineno); }
-#line 1286 "src/parser.c"
+#line 1556 "src/parser.c"
     break;
 
   case 23: /* event_stmt: ON expr THEN block END  */
-#line 91 "src/tinyscript.y"
+#line 93 "src/tinyscript.y"
                            { (yyval.node) = ast_new_event((yyvsp[-3].expr), (yyvsp[-1].node), yylineno); }
-#line 1292 "src/parser.c"
+#line 1562 "src/parser.c"
     break;
 
   case 24: /* schedule_stmt: SCHEDULE AT TIME DO block END  */
-#line 95 "src/tinyscript.y"
+#line 97 "src/tinyscript.y"
                                   { (yyval.node) = ast_new_schedule(ast_parse_time((yyvsp[-3].str)), (yyvsp[-1].node), yylineno); }
-#line 1298 "src/parser.c"
+#line 1568 "src/parser.c"
     break;
 
   case 25: /* expr: expr PLUS expr  */
-#line 99 "src/tinyscript.y"
+#line 101 "src/tinyscript.y"
                      { (yyval.expr) = ast_new_binary_expr(OP_ADD, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1304 "src/parser.c"
+#line 1574 "src/parser.c"
     break;
 
   case 26: /* expr: expr MINUS expr  */
-#line 100 "src/tinyscript.y"
+#line 102 "src/tinyscript.y"
                       { (yyval.expr) = ast_new_binary_expr(OP_SUB, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1310 "src/parser.c"
+#line 1580 "src/parser.c"
     break;
 
   case 27: /* expr: expr MULT expr  */
-#line 101 "src/tinyscript.y"
+#line 103 "src/tinyscript.y"
                      { (yyval.expr) = ast_new_binary_expr(OP_MUL, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1316 "src/parser.c"
+#line 1586 "src/parser.c"
     break;
 
   case 28: /* expr: expr DIV expr  */
-#line 102 "src/tinyscript.y"
+#line 104 "src/tinyscript.y"
                     { (yyval.expr) = ast_new_binary_expr(OP_DIV, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1322 "src/parser.c"
+#line 1592 "src/parser.c"
     break;
 
   case 29: /* expr: expr GT expr  */
-#line 103 "src/tinyscript.y"
+#line 105 "src/tinyscript.y"
                    { (yyval.expr) = ast_new_binary_expr(OP_GT, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1328 "src/parser.c"
+#line 1598 "src/parser.c"
     break;
 
   case 30: /* expr: expr LT expr  */
-#line 104 "src/tinyscript.y"
+#line 106 "src/tinyscript.y"
                    { (yyval.expr) = ast_new_binary_expr(OP_LT, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1334 "src/parser.c"
+#line 1604 "src/parser.c"
     break;
 
   case 31: /* expr: expr GE expr  */
-#line 105 "src/tinyscript.y"
+#line 107 "src/tinyscript.y"
                    { (yyval.expr) = ast_new_binary_expr(OP_GE, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1340 "src/parser.c"
+#line 1610 "src/parser.c"
     break;
 
   case 32: /* expr: expr LE expr  */
-#line 106 "src/tinyscript.y"
+#line 108 "src/tinyscript.y"
                    { (yyval.expr) = ast_new_binary_expr(OP_LE, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1346 "src/parser.c"
+#line 1616 "src/parser.c"
     break;
 
   case 33: /* expr: expr EQ expr  */
-#line 107 "src/tinyscript.y"
+#line 109 "src/tinyscript.y"
                    { (yyval.expr) = ast_new_binary_expr(OP_EQ, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1352 "src/parser.c"
+#line 1622 "src/parser.c"
     break;
 
   case 34: /* expr: expr NEQ expr  */
-#line 108 "src/tinyscript.y"
+#line 110 "src/tinyscript.y"
                     { (yyval.expr) = ast_new_binary_expr(OP_NEQ, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1358 "src/parser.c"
+#line 1628 "src/parser.c"
     break;
 
   case 35: /* expr: '(' expr ')'  */
-#line 109 "src/tinyscript.y"
+#line 111 "src/tinyscript.y"
                    { (yyval.expr) = (yyvsp[-1].expr); }
-#line 1364 "src/parser.c"
+#line 1634 "src/parser.c"
     break;
 
   case 36: /* expr: NUMBER  */
-#line 110 "src/tinyscript.y"
+#line 112 "src/tinyscript.y"
              { (yyval.expr) = ast_new_number_expr((yyvsp[0].num)); }
-#line 1370 "src/parser.c"
+#line 1640 "src/parser.c"
     break;
 
   case 37: /* expr: IDENT  */
-#line 111 "src/tinyscript.y"
+#line 113 "src/tinyscript.y"
             { if (is_sensor_name((yyvsp[0].str))) { (yyval.expr) = ast_new_variable_expr((yyvsp[0].str)); } else { (yyval.expr) = ast_new_variable_expr((yyvsp[0].str)); } }
-#line 1376 "src/parser.c"
+#line 1646 "src/parser.c"
     break;
 
 
-#line 1380 "src/parser.c"
+#line 1650 "src/parser.c"
 
       default: break;
     }
@@ -1423,7 +1693,37 @@ yyerrlab:
   if (!yyerrstatus)
     {
       ++yynerrs;
-      yyerror (YY_("syntax error"));
+      {
+        yypcontext_t yyctx
+          = {yyssp, yytoken};
+        char const *yymsgp = YY_("syntax error");
+        int yysyntax_error_status;
+        yysyntax_error_status = yysyntax_error (&yymsg_alloc, &yymsg, &yyctx);
+        if (yysyntax_error_status == 0)
+          yymsgp = yymsg;
+        else if (yysyntax_error_status == -1)
+          {
+            if (yymsg != yymsgbuf)
+              YYSTACK_FREE (yymsg);
+            yymsg = YY_CAST (char *,
+                             YYSTACK_ALLOC (YY_CAST (YYSIZE_T, yymsg_alloc)));
+            if (yymsg)
+              {
+                yysyntax_error_status
+                  = yysyntax_error (&yymsg_alloc, &yymsg, &yyctx);
+                yymsgp = yymsg;
+              }
+            else
+              {
+                yymsg = yymsgbuf;
+                yymsg_alloc = sizeof yymsgbuf;
+                yysyntax_error_status = YYENOMEM;
+              }
+          }
+        yyerror (yymsgp);
+        if (yysyntax_error_status == YYENOMEM)
+          YYNOMEM;
+      }
     }
 
   if (yyerrstatus == 3)
@@ -1565,11 +1865,12 @@ yyreturnlab:
   if (yyss != yyssa)
     YYSTACK_FREE (yyss);
 #endif
-
+  if (yymsg != yymsgbuf)
+    YYSTACK_FREE (yymsg);
   return yyresult;
 }
 
-#line 114 "src/tinyscript.y"
+#line 116 "src/tinyscript.y"
 
 
 void yyerror(const char *s) {

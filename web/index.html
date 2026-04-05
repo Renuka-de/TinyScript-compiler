@@ -2,18 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TinyScript Compiler UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TinyScript Visualizer</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="panel">
-    <h1>TinyScript Compiler</h1>
-    <textarea id="source" placeholder="Write TinyScript here..."></textarea>
-    <div class="controls">
-      <button id="compile">Compile & Run</button>
-      <button id="download">Download IR</button>
-    </div>
-    <pre id="output"></pre>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="brand">TinyScript</p>
+        <p class="subtitle">Compiler Visualization & Execution Simulator</p>
+      </div>
+      <div class="status-pill" id="statusPill">Ready</div>
+    </header>
+
+    <main class="layout-grid">
+      <section class="panel editor-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Code Editor</h2>
+            <p>Compose TinyScript and preview the compilation flow.</p>
+          </div>
+          <div class="badge">Demo Mode</div>
+        </div>
+        <div class="editor-wrapper">
+          <div class="code-editor">
+            <div class="line-gutter" id="lineNumbers"></div>
+            <div class="code-area">
+              <div class="editor-preview" id="editorPreview"></div>
+              <textarea id="source" spellcheck="false"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="controls-row">
+          <button id="compile">Compile</button>
+          <button id="run">▶ Run</button>
+          <button id="pause">⏸ Pause</button>
+          <button id="step">⏭ Step</button>
+          <button id="reset">🔄 Reset</button>
+        </div>
+        <div class="meta-row">
+          <div class="meta-card">
+            <span>Current Line</span>
+            <strong id="currentLine">1</strong>
+          </div>
+          <div class="meta-card">
+            <span>AST Nodes</span>
+            <strong id="nodeCount">0</strong>
+          </div>
+          <div class="meta-card">
+            <span>IR Instructions</span>
+            <strong id="irCount">0</strong>
+          </div>
+        </div>
+        <div class="error-panel" id="errorPanel" hidden>
+          <strong>Parse Error</strong>
+          <p id="errorMessage"></p>
+        </div>
+      </section>
+
+      <section class="panel ast-panel">
+        <div class="panel-header">
+          <div>
+            <h2>AST Visualization</h2>
+            <p>Interactive tree structure for program semantics.</p>
+          </div>
+        </div>
+        <div class="ast-tree" id="astTree"></div>
+      </section>
+
+      <section class="panel ir-panel">
+        <div class="panel-header">
+          <div>
+            <h2>IR Viewer</h2>
+            <p>Inspect the intermediate instructions and execution form.</p>
+          </div>
+          <div class="toggle-group">
+            <button class="toggle-button active" id="rawViewBtn">Raw</button>
+            <button class="toggle-button" id="structuredViewBtn">Structured</button>
+          </div>
+        </div>
+        <div class="ir-container">
+          <pre id="irRaw" class="ir-output"></pre>
+          <div id="irStructured" class="ir-structured hidden"></div>
+        </div>
+      </section>
+
+      <section class="panel exec-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Execution Simulator</h2>
+            <p>Step through TinyScript execution with state tracking.</p>
+          </div>
+        </div>
+        <div class="execution-layout">
+          <div class="state-card">
+            <h3>Device State</h3>
+            <div id="deviceState" class="state-grid"></div>
+          </div>
+          <div class="state-card">
+            <h3>Variables</h3>
+            <div id="variableState" class="state-grid"></div>
+          </div>
+          <div class="state-card log-panel">
+            <h3>Execution Log</h3>
+            <div id="stepLog" class="log-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
   <script src="app.js"></script>
 </body>
